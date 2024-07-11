@@ -1,0 +1,264 @@
+\documentclass{article}
+\usepackage[english, greek]{babel}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage[backend=biber,style=numeric,autolang=hyphen]{biblatex}
+ \usepackage{amsmath}
+
+\title{Ανάλυση και Σχεδιασμός Αλγορίθμων}
+\author{Ιωάννης Χατζήνας \and Ιωάννης Λώλος}
+\date{Απρίλιος-Μάιος 2024}
+
+\addbibresource{sample.bib} %Imports bibliography file
+
+\begin{document}
+
+\maketitle
+
+\section*{Πρόβλημα 1}
+\subsection*{Ύπαρξη Εφικτού Δρομολογίου ${s\rightarrow t}$}
+Το πρόβλημα της διαπίστωσης ύπαρξης κάποιας εφικτής διαδρομής, ανάμεσα σε δύο κόμβους $ s-t $ ενός ακατεύθυντου γράφου $ G $ (χωρίς να ληφθεί κάποιος περιορισμός για τα βάρη), είναι απλό και μπορεί να λυθεί με τη χρήση είτε Διερεύνυσης κατα Βάθος, είτε Διερεύνυσης κατα Πλάτος. Θα επιλέξουμε αυθαίρετα τον αλγόριθμο \foreignlanguage{english}{DFS}\cite{cormen_dfs} και θα τον τροποποιήσουμε αναλόγως, ώστε να λαμβάνει υπ'όψιν την περιορισμένη χιλιομετρική απόσταση $ L $ που μπορεί να καλυφθεί με γεμάτο ρεζερβουάρ και τα μήκη $ l_e $ των οδικών αρτηριών και τελικά να επιστρέφει ΑΛΗΘΕΣ αν ή διαδρομή είναι εφικτή, αλλιώς ΨΕΥΔΕΣ. Οι αλλαγές που εφαρμόσαμε στον αλγόριθμο είναι οι εξής:
+\begin{itemize}
+    \item Παραλήψαμε οτιδήποτε σχετικό με τους προκάτοχους κάθε κόμβου και τον χρόνο επίσκεψης τους, καθώς δεν αποτελούν πληροφορίες χρήσιμες στον αλγόριθμο μας.
+    \item Καλέσαμε tην υπορρουτίνα ΕΠΙΣΚΕΨΗ με εκκίνηση μόνο τον κόμβο $ s $, αφού δεν θέλουμε να επισκεφθούμε ολόκληρο το γράφημα, αλλά μόνο όσους κόμβους μπορούμε να φτάσουμε ξεκινώντας από τον $ s $ 
+    \item Προσθέσαμε στις γραμμές 5-8 την συνθήκη τερματισμού του αλγορίθμου
+    \item Η υπορρουτίνα ΕΠΙΣΚΕΨΗ δέχεται πλέον το όρισμα $ L $
+    \item Στη γραμμή 11 περιορίσαμε τους γειτονικούς κόμβους που θα επισκευθούμε μόνο σε αυτούς για τους οποίους το βάρος της ακμής $ (u, v)$ είναι μικρότερο από $ L $
+\end{itemize}
+Συνοπτικά ο αλγόριθμος ξεκινάει από τον κόμβο $ s $ και επισκέπτεται όλους τους κόμβους του γράφου, τους οποίους μπορεί να φτάσει μέσω ακμών που έχουν βάρος μικρότερο του $ L $. Όσοι κόμβοι επισκέπτονται απο τον αλγόριθμο βάφονται μελανοί. Στο τέλος, αν ο κόμβος $ t $ είναι μελανός τότε επιστρέφεται ΑΛΗΘΕΣ, αλλιώς ΨΕΥΔΕΣ.
+
+Όσον αφορά τον χρόνο εκτέλεσης, στην χειρότερη περίπτωση (όταν δηλαδή πρέπει να επισκευθούμε όλους τους κόμβους του γράφου) ισχύει:
+\begin{itemize}
+    \item Ο βρόγχος των γραμμών 2-3 απαιτεί χρόνο $ O(V)$
+    \item Η συνθήκη των γραμμών 5-8 απαιτεί χρόνο $ O(1)$
+    \item Η κλήση της υπορρουτίνας ΕΠΙΣΚΕΨΗ, μαζι με όλες τις αναδρομικές κλήσεις της θα εξερευνήσει όλες τις ακμές και όλους τους κόμβους του γράφου, επομένως απαιτεί χρόνο $ O(|Ε| + |V|) $ 
+\end{itemize}
+Συνολικά λοιπόν ο αλγόριθμος έχει χρονική πολυπλοκότητα $ O(|V|+|E|) $
+\selectlanguage{english}
+\begin{algorithm}
+
+\renewcommand{\algorithmicif}{\textbf{\foreignlanguage{greek}{Αν}}}
+\renewcommand{\algorithmicfor}{\textbf{\foreignlanguage{greek}{Για}}}
+\renewcommand{\algorithmicend}{\textbf{\foreignlanguage{greek}{Τέλος}}}
+\renewcommand{\algorithmicdo}{}
+\renewcommand{\algorithmicthen}{\textbf{\foreignlanguage{greek}{τότε}}}
+\renewcommand{\algorithmicreturn}{\textbf{\foreignlanguage{greek}{Επίστρεψε}}}
+\renewcommand{\algorithmicelse}{\textbf{\foreignlanguage{greek}{Αλλιώς}}}
+\renewcommand{\algorithmicprocedure}{}
+
+\caption{\foreignlanguage{greek}{Ύπαρξη Εφικτού Δρομολογίου $s \rightarrow t$}} \label{alg:pathexists}
+\begin{algorithmic}[1]
+\Procedure{\foreignlanguage{greek}{Ύπαρξη Διαδρομής}}{$G$,$L$,$s$,$t$}
+\For {\foreignlanguage{greek}{κάθε} $u \in G.V$}
+    \State$u.$\foreignlanguage{greek}{χρώμα} $=$ \foreignlanguage{greek}{ΛΕΥΚΟ}
+\EndFor
+\State \Call{\foreignlanguage{greek}{ΕΠΙΣΚΕΨΗ}}{G,s,L}
+\If{$t.$\foreignlanguage{greek}{χρώμα} $==$ \foreignlanguage{greek}{ΜΕΛΑΝΟ}}
+    \State \Return \foreignlanguage{greek}{ΑΛΗΘΕΣ}
+\Else
+    \State \Return \foreignlanguage{greek}{ΨΕΥΔΕΣ}
+\EndIf
+\EndProcedure
+\Statex
+\Procedure{\foreignlanguage{greek}{ΕΠΙΣΚΕΨΗ}}{$G$,$u$,$L$}
+    \State $u.$\foreignlanguage{greek}{χρώμα} $==$ \foreignlanguage{greek}{ΓΚΡΙΖΟ}
+    \For{\foreignlanguage{greek}{κάθε} $v \in G.adj[u]$ \foreignlanguage{greek}{με} $w(v,u) \leq L$}
+        \If{$v.$\foreignlanguage{greek}{χρώμα} $==$ \foreignlanguage{greek}{ΛΕΥΚΟ}}
+            \State \Call{\foreignlanguage{greek}{ΕΠΙΣΚΕΨΗ}}{$G$,$v$,$L$}
+        \EndIf
+    \EndFor
+    \State $u.$\foreignlanguage{greek}{χρώμα} $=$ \foreignlanguage{greek}{ΜΕΛΑΝΟ}
+\EndProcedure
+\end{algorithmic}    
+\end{algorithm}
+\selectlanguage{greek}
+
+\subsection*{Εύρεση Ελάχιστης Ποσότητας Καυσίμων}
+Για την εύρεση της ελάχιστης ποσότητας καυσίμων που απαιτείται για την ολοκλήρωση της διαδρομής θα προτείνουμε μια \foreignlanguage{english}{brute force} προσέγγιση, δεδομένου ότι έχουμε στην διάθεση μας έναν γρήγορο αλγόριθμο πιστοποίησης της ύπαρξης δυνατού δρομολογίου $ s \rightarrow t$ για δοσμένη ποσότητα καυσίμων $ L $. Θα δοκιμάσουμε τον αλγόριθμο \ref{alg:pathexists} για όλα τα δυνατά μήκη $l_e$ και θα κρατήσουμε το μικρότερο μήκος για το οποίο ο αλγόριθμος τερματίζει επιτυχώς. Με αυτόν τον τρόπο μπορούμε να πετύχουμε χρονική πολυπλοκότητα $ O((|V|+|E|)|E|) $, καθώς πρέπει να καλέσουμε $ |E| $ φορές τον αλγόριθμο \ref{alg:pathexists}, ο οποίος απαιτεί χρόνο $ O(|Ε| + |V|) $. Αυτό δεν είναι το βέλτιστο που μπορεί να επιτευχθεί. Μπορούμε να πετύχουμε πολυπλοκότητα $ O((|V|+|E|)\log{|E|}) $, αν αντί να κάνουμε γραμμική αναζήτηση στο σύνολο των $ l_e $, τα ταξινομήσουμε και ψάξουμε τη λύση με δυαδική αναζήτηση. Η ταξινόμηση μπορεί να επιτευχθεί με ταχύτητα έως και $ O(E\log{E}) $, αν χρησιμοποιήσουμε πχ τον αλγόριθμο \foreignlanguage{english}{mergesort}, ενώ πλέον η υπόλοιπη διαδικασία χρειάζεται μόνο $ O((|V|+|E|)\log{E}) $ χρόνο. Η συνολική χρονική πολυπλοκότητα είναι: $ O((|V|+|E|)\log{E}) $. Συμπληρωματικά, αν υποθέσουμε ότι κάθε ζεύγος κόμβων συνδέεται από το πολύ μία ακμή, τότε ο γράφος έχει το πολύ $\frac{u(u-1)}{2}$ ακμές, όπου $ u $ το πλήθος κόμβων. Επομένως $ Ο((|V|+|E|)\log{E}) = Ο((|V|+|E|)\log{V})$ (απόδειξη σε παράρτημα).
+
+    \selectlanguage{english}
+
+\begin{algorithm}
+
+\renewcommand{\algorithmicif}{\textbf{\foreignlanguage{greek}{Αν}}}
+\renewcommand{\algorithmicfor}{\textbf{\foreignlanguage{greek}{Για}}}
+\renewcommand{\algorithmicend}{\textbf{\foreignlanguage{greek}{Τέλος}}}
+\renewcommand{\algorithmicdo}{}
+\renewcommand{\algorithmicwhile}{\textbf{\foreignlanguage{greek}{Όσο}}}
+\renewcommand{\algorithmicthen}{\textbf{\foreignlanguage{greek}{τότε}}}
+\renewcommand{\algorithmicreturn}{\textbf{\foreignlanguage{greek}{Επίστρεψε}}}
+\renewcommand{\algorithmicelse}{\textbf{\foreignlanguage{greek}{Αλλιώς}}}
+\renewcommand{\algorithmicprocedure}{}
+
+\caption{\foreignlanguage{greek}{Εύρεση Ελάχιστης Ποσότητας Καυσίμων}} \label{alg:mergesort}
+\begin{algorithmic}[1]
+    \Procedure{\foreignlanguage{greek}{ΕΥΡΕΣΗ ΕΛΑΧΙΣΤΗΣ ΠΟΣΟΤΗΤΑΣ ΚΑΥΣΙΜΩΝ}}{$G$, $s$, $t$}
+    \State \foreignlanguage{greek}{ΤΑΞΙΝΟΜΗΣΗ}($ G.l $) \Comment{\foreignlanguage{greek}{με χρήση} mergesort}
+    \State $ L = 0, R = G.E.$\foreignlanguage{greek}{μέγεθος}
+    \While{$L \neq R$}
+        \State $M = \lfloor (L+R)/2 \rfloor$
+        \If{\Call{\foreignlanguage{greek}{Ύπαρξη Διαδρομής}}{G,$G.l_M$,s,t}}
+            \State \foreignlanguage{greek}{ελάχιστο}$=G.l_M$
+            \State $R = M$
+        \Else
+            \State $L = M$
+        \EndIf
+    \EndWhile
+    \State \Return \foreignlanguage{greek}{ελάχιστο}
+    \EndProcedure
+\end{algorithmic}    
+\end{algorithm}
+\selectlanguage{greek}
+
+
+\section*{Πρόβλημα 2}
+Έστω $t_i$ ο χρόνος εξυπηρέτησης του $i$-οστού πολίτη στην ουρά και $w_i$ ο χρόνος αναμονής του. Ο χρόνος $w_i$  δίνεται από το άθροισμα των χρόνων εξυπηρέτησης των μπροστινών πολιτών:
+\begin{equation} \label{eq:1}
+    w_i = \sum_{j=1}^{i-1}t_j
+\end{equation}
+Ο συνολικός χρόνος αναμονής $W$ για $n$ πολίτες δίνεται ως εξής:
+\begin{equation} \label{eq:2}
+    W = \sum_{i=1}^{n}{w_i}
+\end{equation}
+Επομένως από τις εξισώσεις (\ref{eq:1}),(\ref{eq:2}) προκύπτει:
+\begin{displaymath}
+    W = \sum_{i=1}^{n}\sum_{j=1}^{i-1}t_j = \sum_{i=1}^{n}{(n-i)t_i}
+\end{displaymath}
+% Η απόδειξη παρακάτω
+Παρατηρούμε ότι ο χρόνος εξυπηρέτησης των πρώτων πολιτών στην ουρά $(t_1, t_2,...)$ πολλαπλασιάζεται με έναν παράγοντα $n-i$, ο οποίος μειώνεται όσο αυξάνεται το $i$. Επομένως για να ελαχιστοποιήσουμε το άθροισμα, και επομένως τον συνολικό χρόνο αναμονής $W$ αρκεί να ταξινομήσουμε τους πολίτες στην ουρά, ώστε οι πρώτοι να έχουν τον μικρότερο χρόνο εξυπηρέτησης. Θα το κάνουμε χρησιμοποιώντας τον αλγόριθμο ταξινόμησης \foreignlanguage{english}{Mergesort}\cite{cormen_mergesort}, ο οποίος είναι της τάξης $O(n\log{n})$
+
+\begin{algorithm}
+
+\renewcommand{\algorithmicif}{\textbf{\foreignlanguage{greek}{Αν}}}
+\renewcommand{\algorithmicfor}{\textbf{\foreignlanguage{greek}{Για}}}
+\renewcommand{\algorithmicend}{\textbf{\foreignlanguage{greek}{Τέλος}}}
+\renewcommand{\algorithmicdo}{}
+\renewcommand{\algorithmicthen}{\textbf{\foreignlanguage{greek}{τότε}}}
+\renewcommand{\algorithmicreturn}{\textbf{\foreignlanguage{greek}{Επίστρεψε}}}
+\renewcommand{\algorithmicelse}{\textbf{\foreignlanguage{greek}{Αλλιώς}}}
+\renewcommand{\algorithmicprocedure}{}
+
+\selectlanguage{english}
+\caption{Mergesort} \label{alg:mergesort}
+\begin{algorithmic}[1]
+\Procedure{\foreignlanguage{greek}{ΣΥΓΧΩΝΕΥΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ}}{$A$,$p$,$q$}
+\If{$p < r$}
+    \State $q = \lfloor (p+r)/2 \rfloor$
+    \State \Call{\foreignlanguage{greek}{ΣΥΓΧΩΝΕΥΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ}}{A,p,q}
+    \State \Call{\foreignlanguage{greek}{ΣΥΓΧΩΝΕΥΤΙΚΗ ΤΑΞΙΝΟΜΗΣΗ}}{A,q+1,r}
+    \State \Call{\foreignlanguage{greek}{ΣΥΓΧΩΝΕΥΣΗ}}{A,p,q,r}
+\EndIf
+\EndProcedure
+\Statex
+\Procedure{\foreignlanguage{greek}{ΣΥΓΧΩΝΕΥΣΗ}}{$A$,$p$,$q$,$r$}
+    \State $n_1 = q-p+1$
+    \State $n_2 = r-q$
+    \State \foreignlanguage{greek}{Έστω $L[1..n_1+1]$ και $R[1..n_2+1]$ δύο νέες συστοιχίες}
+\For{$i = 1$ \foreignlanguage{greek}{έως} $n_1$}
+        \State $L[i] = A[p+i-1]$
+    \EndFor
+\For{$j = 1$ \foreignlanguage{greek}{έως} $n_2$}
+        \State $R[j] = A[q+j]$
+    \EndFor
+    \State $L[n_1+1] = \infty$
+    \State $R[n_2+1] = \infty$
+    \State $i=1$
+    \State $j=1$
+    \For{$k = p$ \foreignlanguage{greek}{έως} r}
+        \If{$L[i] \leq R[j]$}
+            \State $A[k] = L[i]$
+            \State $i=i+1$
+        \Else
+            \State $A[k] = R[j]$
+            \State $j = j+1$
+        \EndIf
+    \EndFor
+\EndProcedure
+\end{algorithmic}    
+\end{algorithm}
+\selectlanguage{greek}
+
+\pagebreak
+
+\section*{Πρόβλημα 3}
+Έστω $S$ η συμβολοσειρά μας και ${c_1, c_2, ..., c_m}$ οι $m$ τομές, προφανώς με $1 \leq c_i \leq n$ για κάθε $i \in [1,m]$. Το ελάχιστο κόστος του να γίνουν όλες οι τομές που βρίσκονται ανάμεσα στην $i$-οστή και την $j$-οστή τομή της συμβολοσειράς μπορεί να προσδιοριστεί από την εξής αναδρομική συνάρτηση:
+
+\begin{algorithm}
+
+\renewcommand{\algorithmicif}{\textbf{\foreignlanguage{greek}{Αν}}}
+\renewcommand{\algorithmicfor}{\textbf{\foreignlanguage{greek}{Για}}}
+\renewcommand{\algorithmicend}{\textbf{\foreignlanguage{greek}{Τέλος}}}
+\renewcommand{\algorithmicdo}{}
+\renewcommand{\algorithmicthen}{\textbf{\foreignlanguage{greek}{τότε}}}
+\renewcommand{\algorithmicreturn}{\textbf{\foreignlanguage{greek}{Επίστρεψε}}}
+\renewcommand{\algorithmicelse}{\textbf{\foreignlanguage{greek}{Αλλιώς}}}
+\renewcommand{\algorithmicprocedure}{}
+
+\selectlanguage{english}
+\caption{\foreignlanguage{greek}{Αναδρομικό Ελάχιστο Κόστος}} \label{alg:min_cost_recursive}
+\begin{algorithmic}[1]
+\Procedure{\foreignlanguage{greek}{ΑΝΑΔΡΟΜΙΚΟ ΕΛΑΧΙΣΤΟ ΚΟΣΤΟΣ}}{$S$,\foreignlanguage{greek}{τομές},$i$,$j$}
+\If{$j - i \leq 1$}
+\State \Return $0$
+\Else
+\State \foreignlanguage{greek}{ελάχιστοΚόστος} $= \infty$
+\For{k \foreignlanguage{greek}{από} $i$ \foreignlanguage{greek}{μέχρι} $j$}
+\State \foreignlanguage{greek}{κόστος} =  $ c_j - c_i +$ \Call{\foreignlanguage{greek}{ΑΝΑΔΡΟΜΙΚΟ ΕΛΑΧΙΣΤΟ ΚΟΣΤΟΣ}}{$S$,\foreignlanguage{greek}{τομές}, $i$, $k$} + \Call{\foreignlanguage{greek}{ΑΝΑΔΡΟΜΙΚΟ ΕΛΑΧΙΣΤΟ ΚΟΣΤΟΣ}}{$S$,\foreignlanguage{greek}{τομές}, $k$, $j$}
+\State \foreignlanguage{greek}{ελάχιστοΚόστος} $= \min$ (\foreignlanguage{greek}{ελάχιστοΚόστος}, \foreignlanguage{greek}{κόστος})
+\EndFor
+\State \Return \foreignlanguage{greek}{ελάχιστοΚόστος}
+\EndIf
+\EndProcedure
+\end{algorithmic}    
+\end{algorithm}
+\selectlanguage{greek}
+Το έλαχιστο συνολικό κόστος όλων των τομών μπορεί να προσδιοριστεί από την ΑΝΑΔΡΟΜΙΚΟ ΕΛΑΧΙΣΤΟ ΚΟΣΤΟΣ($S$,$0$,$m+1$) (Καταχρηστικά θα χρησιμοποιήσουμε τo $c_0$ για να δηλώσουμε την αρχή της συμβολοσειράς και τo $c_{m+1}$ για το τέλος της.), ωστόσο ο παραπάνω αλγόριθμος δεν είναι αποδοτικός και μπορεί να βελτιωθεί με τη χρήση δυναμικού προγραμματισμού. Αυτό θα το επιτύχουμε χρησιμοποιώντας έναν $(m+2) \times (m+2)$ πίνακα κόστους, στην κάθε θέση ΚΟΣΤΟΣ$[i][j]$ του οποίου θα αποθηκεύσουμε το κόστος διαχωρισμού της συμβολοσειράς από την τομή $c_i$ μέχρι την τομή $c_j$.
+
+\begin{algorithm}
+
+\renewcommand{\algorithmicif}{\textbf{\foreignlanguage{greek}{Αν}}}
+\renewcommand{\algorithmicfor}{\textbf{\foreignlanguage{greek}{Για}}}
+\renewcommand{\algorithmicend}{\textbf{\foreignlanguage{greek}{Τέλος}}}
+\renewcommand{\algorithmicdo}{}
+\renewcommand{\algorithmicthen}{\textbf{\foreignlanguage{greek}{τότε}}}
+\renewcommand{\algorithmicreturn}{\textbf{\foreignlanguage{greek}{Επίστρεψε}}}
+\renewcommand{\algorithmicelse}{\textbf{\foreignlanguage{greek}{Αλλιώς}}}
+\renewcommand{\algorithmicprocedure}{}
+
+\selectlanguage{english}
+\caption{\foreignlanguage{greek}{Δυναμικό Ελάχιστο Κόστος}} \label{alg:min_cost_dynamic}
+\begin{algorithmic}[1]
+\Procedure{\foreignlanguage{greek}{ΔΥΝΑΜΙΚΟ ΕΛΑΧΙΣΤΟ ΚΟΣΤΟΣ}}{$S$,\foreignlanguage{greek}{τομές}}
+\State \foreignlanguage{greek}{Έστω ΚΟΣΤΟΣ}$[0..m+1][0..m+1]$ \foreignlanguage{greek}{νέα συστοιχία}
+\State \foreignlanguage{greek}{ΚΟΣΤΟΣ}$[i][j] = 0$ \foreignlanguage{greek}{για κάθε} $i,j$
+\For{\foreignlanguage{greek}{απόσταση από 2 έως $m + 1$}}
+    \For{i \foreignlanguage{greek}{από 0 έως $m + 1 -$απόσταση}}
+        \State $j = i + $\foreignlanguage{greek}{απόσταση}
+        \State \foreignlanguage{greek}{ΚΟΣΤΟΣ}$[i][j] = \infty$
+        \For{k \foreignlanguage{greek}{από $i+1$ μέχρι $j - 1$}}
+            \State \foreignlanguage{greek}{κόστος $=$ ΚΟΣΤΟΣ$[i][k]$ + ΚΟΣΤΟΣ$[k][j] + c_j - c_i$}
+            \State \foreignlanguage{greek}{ΚΟΣΤΟΣ$[i][j] = \min($ΚΟΣΤΟΣ$[i][j],$κόστος)}
+        \EndFor
+    \EndFor
+\EndFor
+\State \Return \foreignlanguage{greek}{ΚΟΣΤΟΣ}$[0][m+1]$
+\EndProcedure
+\end{algorithmic}    
+\end{algorithm}
+\selectlanguage{greek}
+Ο νέος αλγόριθμος χρειάζεται $Ο(m^2)$ για την αρχικοποίηση του πίνακα ΚΟΣΤΟΣ, ενώ έχει τρεις εμφωλευμένους βρόγχους, ο μετρητής του καθενός εκ των οποίων λαμβάνει το πολύ $m + 2$ τιμές. Οι υπόλοιπες εντολές μπορούν να εκτελεστούν σε σταθερό χρόνο. Συμπεραίνουμε πως ο δυναμικός αλγόριθμος έχει $O(m^3)$ χρόνο εκτέλεσης, το οποίο είναι μια βελτίωση σε σχέση με τον αναδρομικό αλγόριθμο, ο οποίος έχει εκθετικό χρόνο εκτέλεσης.
+
+\section*{Παράρτημα A}
+\subsection*{Απόδειξη $ O((|V|+|E|)\log{E}) $ = $ O((|V|+|E|)\log{V}) $}
+Σύμφωνα με την υπόθεση μας, στην χειρότερη περίπτωση $E = \frac{V(V-1)}{2}$, όπου $E,V$ τα πλήθη των ακμών και κόμβων αντίστοιχα. Επομένως:
+\begin{align*}
+    E &= \frac{V(V-1)}{2} \Rightarrow \\
+    \log{E} &= \log{\frac{V(V-1)}{2}} \Rightarrow \\
+    \log{E} &= \log{V} + \log{(V-1)} - \log{2} \Rightarrow \\
+    (|V|+|E|)\log{E} &= (|V|+|E|)(\log{V} + \log{(V-1)} - \log{2}) \Rightarrow \\
+    O((|V|+|E|)\log{E}) &= O((|V|+|E|)(\log{V} + \log{(V-1)} - \log{2})) \Rightarrow \\
+    O((|V|+|E|)\log{E}) &= O((|V|+|E|)\log{V})
+\end{align*}
+
+\printbibliography
+\end{document}
